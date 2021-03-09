@@ -18,12 +18,19 @@ function PostForm() {
       const data = proxy.readQuery({
         query: FETCH_POSTS_QUERY,
       });
+
+      let newData = [...data.getPosts];
+      newData = [result.data.createPost, ...newData];
       proxy.writeQuery({
         query: FETCH_POSTS_QUERY,
         data: {
-          getPosts: [result.data.createPost, ...data.getPosts],
+          ...data,
+          getPosts: {
+            newData,
+          },
         },
       });
+
       values.body = '';
     },
     onError(err) {

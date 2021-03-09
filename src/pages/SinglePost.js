@@ -1,25 +1,28 @@
 import React, { useContext, useState, useRef } from 'react';
 import gql from 'graphql-tag';
-import moment from 'moment';
 import { useQuery, useMutation } from '@apollo/client';
+import moment from 'moment';
 import {
+  Button,
+  Card,
+  Form,
   Grid,
   Image,
-  Card,
-  Button,
   Icon,
   Label,
-  Form,
 } from 'semantic-ui-react';
+
 import { AuthContext } from '../context/auth';
 import LikeButton from '../components/LikeButton';
 import DeleteButton from '../components/DeleteButton';
+import MyPopup from '../util/MyPopup';
 
 function SinglePost(props) {
   const postId = props.match.params.postId;
-  const [comment, setComment] = useState('');
   const { user } = useContext(AuthContext);
   const commentInputRef = useRef(null);
+
+  const [comment, setComment] = useState('');
 
   const { data: { getPost } = {} } = useQuery(FETCH_POST_QUERY, {
     variables: {
@@ -42,9 +45,9 @@ function SinglePost(props) {
     props.history.push('/');
   }
 
-  let postMakrup;
+  let postMarkup;
   if (!getPost) {
-    postMakrup = <p>Loading post...</p>;
+    postMarkup = <p>Loading post..</p>;
   } else {
     const {
       id,
@@ -56,7 +59,8 @@ function SinglePost(props) {
       likeCount,
       commentCount,
     } = getPost;
-    postMakrup = (
+
+    postMarkup = (
       <Grid>
         <Grid.Row>
           <Grid.Column width={2}>
@@ -66,6 +70,7 @@ function SinglePost(props) {
               float="right"
             />
           </Grid.Column>
+
           <Grid.Column width={10}>
             <Card fluid>
               <Card.Content>
@@ -73,28 +78,29 @@ function SinglePost(props) {
                 <Card.Meta>{moment(createdAt).fromNow()}</Card.Meta>
                 <Card.Description>{body}</Card.Description>
               </Card.Content>
-              <hr />
+
               <Card.Content extra>
                 <LikeButton user={user} post={{ id, likeCount, likes }} />
-                <Button
-                  as="div"
-                  labelPosition="right"
-                  onClick={() => {
-                    console.log('COmment on post');
-                  }}
-                >
-                  <Button basic color="blue">
-                    <Icon name="comments" />
+                <MyPopup content="Comment on post">
+                  <Button
+                    as="div"
+                    labelPosition="right"
+                    onClick={() => console.log('Comment on post')}
+                  >
+                    <Button basic color="blue">
+                      <Icon name="comments" />
+                    </Button>
+                    <Label basic color="blue" pointing="left">
+                      {commentCount}
+                    </Label>
                   </Button>
-                  <Label basic color="blue" pointing="left">
-                    {commentCount}
-                  </Label>
-                </Button>
+                </MyPopup>
                 {user && user.username === username && (
                   <DeleteButton postId={id} callback={deletePostCallback} />
                 )}
               </Card.Content>
             </Card>
+
             {user && (
               <Card fluid>
                 <Card.Content>
@@ -106,7 +112,7 @@ function SinglePost(props) {
                         placeholder="Comment.."
                         name="comment"
                         value={comment}
-                        onChange={(e) => setComment(e.target.value)}
+                        onChange={(event) => setComment(event.target.value)}
                         ref={commentInputRef}
                       />
                       <button
@@ -115,13 +121,14 @@ function SinglePost(props) {
                         disabled={comment.trim() === ''}
                         onClick={submitComment}
                       >
-                        Comment
+                        Submit
                       </button>
                     </div>
                   </Form>
                 </Card.Content>
               </Card>
             )}
+
             {comments.map((comment) => (
               <Card fluid key={comment.id}>
                 <Card.Content>
@@ -139,12 +146,11 @@ function SinglePost(props) {
       </Grid>
     );
   }
-
-  return postMakrup;
+  return postMarkup;
 }
 
 const SUBMIT_COMMENT_MUTATION = gql`
-  mutation($postId: ID!, $body: String!) {
+  mutation($postId: String!, $body: String!) {
     createComment(postId: $postId, body: $body) {
       id
       comments {

@@ -1,18 +1,17 @@
-import React from 'react';
+import React, { useContext } from 'react';
 import { Button, Card, Icon, Label, Image } from 'semantic-ui-react';
 import { Link } from 'react-router-dom';
 import moment from 'moment';
 
-function PostCard({
-  post: { body, createdAt, id, username, likeCount, commentCount, likes },
-}) {
-  function likePost() {
-    console.log('Like post!!');
-  }
+import { AuthContext } from '../context/auth';
+import LikeButton from './LikeButton';
+import DeleteButton from './DeleteButton';
 
-  function commentOnPost() {
-    console.log('Comment on post!!');
-  }
+const PostCard = ({
+  post: { body, createdAt, id, username, likeCount, commentCount, likes },
+}) => {
+  const { user } = useContext(AuthContext);
+
   return (
     <Card fluid>
       <Card.Content>
@@ -22,22 +21,19 @@ function PostCard({
           src="https://react.semantic-ui.com/images/avatar/large/molly.png"
         />
         <Card.Header>{username}</Card.Header>
+
         <Card.Meta as={Link} to={`/posts/${id}`}>
           {moment(createdAt).format('ddd, hA, D MMM YYYY')}
           {/* {moment(createdAt).fromNow(true)} */}
         </Card.Meta>
+
         <Card.Description>{body}</Card.Description>
       </Card.Content>
+
       <Card.Content extra>
-        <Button as="div" labelPosition="right" onClick={likePost}>
-          <Button color="teal" basic>
-            <Icon name="heart" />
-          </Button>
-          <Label basic color="teal" pointing="left">
-            {likeCount}
-          </Label>
-        </Button>
-        <Button as="div" labelPosition="right" onClick={commentOnPost}>
+        <LikeButton user={user} post={{ id, likes, likeCount }} />
+
+        <Button labelPosition="right" as={Link} to={`/posts/${id}`}>
           <Button color="blue" basic>
             <Icon name="comments" />
           </Button>
@@ -45,9 +41,11 @@ function PostCard({
             {commentCount}
           </Label>
         </Button>
+
+        {user && user.username === username && <DeleteButton postId={id} />}
       </Card.Content>
     </Card>
   );
-}
+};
 
 export default PostCard;
